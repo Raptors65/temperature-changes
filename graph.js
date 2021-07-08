@@ -16,7 +16,7 @@ var svg = d3.select("#canvas").append("svg")
             .attr("height", height);
 
 var dataArea = svg.append("g")
-                .attr("transform", "translate(" + margins.left + "," + margins.top + ")");
+                .attr("transform", `translate(${margins.left}, ${margins.top})`);
 
 // title
 svg.append("text")
@@ -54,6 +54,7 @@ d3.csv("data.csv",
 
     // using the dataset
     function(data) {
+        console.log(data);
         // X axis
         var x = d3.scaleLinear()
             .domain(d3.extent(data, function(d) { return +d.year; }))
@@ -64,19 +65,39 @@ d3.csv("data.csv",
 
         // Y axis
         var y = d3.scaleLinear()
-            .domain([0, d3.max(data, function(d) { return +d.mean; })])
+            .domain([d3.min(data, function(d) { return +d.low; }), d3.max(data, function(d) { return +d.high; })])
             .range([dataHeight, 0]);
         dataArea.append("g")
             .call(d3.axisLeft(y));
 
-        // the actual line graph
+        // average mean temperature
         dataArea.append("path")
             .datum(data)
             .attr("fill", "none")
-            .attr("stroke", "steelblue")
+            .attr("stroke", "#777")
             .attr("stroke-width", 1.5)
             .attr("d", d3.line()
                 .x(function(d) { return x(d.year) })
                 .y(function(d) { return y(d.mean) })
+            );
+        // average high temperature
+        dataArea.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "#a00")
+            .attr("stroke-width", 1.5)
+            .attr("d", d3.line()
+                .x(function(d) { return x(d.year) })
+                .y(function(d) { return y(d.high) })
+            );
+        // average low temperature
+        dataArea.append("path")
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "#00a")
+            .attr("stroke-width", 1.5)
+            .attr("d", d3.line()
+                .x(function(d) { return x(d.year) })
+                .y(function(d) { return y(d.low) })
             );
 });
