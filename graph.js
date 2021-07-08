@@ -44,60 +44,62 @@ svg.append("text")
     .attr("transform", `rotate(-90, ${margins.left - labelMargin}, ${dataHeight / 2 + margins.top})`)
     .text("Temp");
 
+// formats data
+function formatData(d) {
+    return {year: d.year, mean: d.mean, high: d.high, low: d.low}
+}
+
+// updates graph with new data
+function updateGraph(d) {
+    // X axis
+    var x = d3.scaleLinear()
+        .domain(d3.extent(data, function(d) { return +d.year; }))
+        .range([0, dataWidth]);
+    dataArea.append("g")
+        .attr("transform", "translate(0," + dataHeight + ")")
+        .call(d3.axisBottom(x));
+
+    // Y axis
+    var y = d3.scaleLinear()
+        .domain([d3.min(data, function(d) { return +d.low; }), d3.max(data, function(d) { return +d.high; })])
+        .range([dataHeight, 0]);
+    dataArea.append("g")
+        .call(d3.axisLeft(y));
+
+    // average mean temperature
+    dataArea.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#777")
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+            .x(function(d) { return x(d.year) })
+            .y(function(d) { return y(d.mean) })
+        );
+    // average high temperature
+    dataArea.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#a00")
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+            .x(function(d) { return x(d.year) })
+            .y(function(d) { return y(d.high) })
+        );
+    // average low temperature
+    dataArea.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#00a")
+        .attr("stroke-width", 1.5)
+        .attr("d", d3.line()
+            .x(function(d) { return x(d.year) })
+            .y(function(d) { return y(d.low) })
+        );
+}
+
 // reading the data
 d3.csv("data.csv",
-
-    // formatting variables
-    function(d){
-        return {year: d.year, mean: d.mean, high: d.high, low: d.low}
-    },
-
-    // using the dataset
-    function(data) {
-        console.log(data);
-        // X axis
-        var x = d3.scaleLinear()
-            .domain(d3.extent(data, function(d) { return +d.year; }))
-            .range([0, dataWidth]);
-        dataArea.append("g")
-            .attr("transform", "translate(0," + dataHeight + ")")
-            .call(d3.axisBottom(x));
-
-        // Y axis
-        var y = d3.scaleLinear()
-            .domain([d3.min(data, function(d) { return +d.low; }), d3.max(data, function(d) { return +d.high; })])
-            .range([dataHeight, 0]);
-        dataArea.append("g")
-            .call(d3.axisLeft(y));
-
-        // average mean temperature
-        dataArea.append("path")
-            .datum(data)
-            .attr("fill", "none")
-            .attr("stroke", "#777")
-            .attr("stroke-width", 1.5)
-            .attr("d", d3.line()
-                .x(function(d) { return x(d.year) })
-                .y(function(d) { return y(d.mean) })
-            );
-        // average high temperature
-        dataArea.append("path")
-            .datum(data)
-            .attr("fill", "none")
-            .attr("stroke", "#a00")
-            .attr("stroke-width", 1.5)
-            .attr("d", d3.line()
-                .x(function(d) { return x(d.year) })
-                .y(function(d) { return y(d.high) })
-            );
-        // average low temperature
-        dataArea.append("path")
-            .datum(data)
-            .attr("fill", "none")
-            .attr("stroke", "#00a")
-            .attr("stroke-width", 1.5)
-            .attr("d", d3.line()
-                .x(function(d) { return x(d.year) })
-                .y(function(d) { return y(d.low) })
-            );
-});
+       formatData, // formatting the data
+       updateGraph // updating the graph
+);
