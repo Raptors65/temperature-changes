@@ -44,17 +44,17 @@ svg.append("text")
     .attr("transform", `rotate(-90, ${margins.left - labelMargin}, ${dataHeight / 2 + margins.top})`)
     .text("Temp");
 
-//Read the data
+// reading the data
 d3.csv("data.csv",
 
-    // When reading the csv, I must format variables:
+    // formatting variables
     function(d){
         return {year: d.year, mean: d.mean, high: d.high, low: d.low}
     },
 
-    // Now I can use this dataset:
+    // using the dataset
     function(data) {
-        // Add X axis --> it is a date format
+        // X axis
         var x = d3.scaleLinear()
             .domain(d3.extent(data, function(d) { return +d.year; }))
             .range([0, dataWidth]);
@@ -62,14 +62,14 @@ d3.csv("data.csv",
             .attr("transform", "translate(0," + dataHeight + ")")
             .call(d3.axisBottom(x));
 
-        // Add Y axis
+        // Y axis
         var y = d3.scaleLinear()
             .domain([0, d3.max(data, function(d) { return +d.mean; })])
             .range([dataHeight, 0]);
         dataArea.append("g")
             .call(d3.axisLeft(y));
 
-        // Add the line
+        // the actual line graph
         dataArea.append("path")
             .datum(data)
             .attr("fill", "none")
@@ -79,5 +79,4 @@ d3.csv("data.csv",
                 .x(function(d) { return x(d.year) })
                 .y(function(d) { return y(d.mean) })
             );
-
-})
+});
