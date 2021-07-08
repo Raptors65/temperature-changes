@@ -1,0 +1,10 @@
+.city {
+    border: 1px solid black;
+    margin: 0;
+    padding: 10px;
+    width: 300px;
+}
+
+input {
+    margin-bottom: 5px;
+}
