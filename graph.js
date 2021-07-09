@@ -1,14 +1,18 @@
 const cities = ["toronto", "new_york"];
 
 // dimensions
-const width = 460;
+const width = 600;
 const height = 400;
 
-const margins = {top: 30, right: 30, bottom: 50, left: 80};
+const margins = {top: 30, right: 150, bottom: 50, left: 80};
 const dataWidth = width - margins.left - margins.right;
 const dataHeight = height - margins.top - margins.bottom;
 
 const labelMargin = 30;
+
+const legendLMargin = 30;
+const legendTMargin = 10;
+
 
 // creating the graph area
 let svg = d3.select("#canvas").append("svg")
@@ -50,6 +54,14 @@ let yAxisGroup = dataArea.append("g")
 // colour scheme
 let colours = d3.scaleOrdinal(d3.schemeCategory10);
 
+// legend
+let legend = d3.legendColor()
+    .shape("circle")
+    .shapePadding(10)
+    .scale(colours);
+let legendGroup = svg.append("g")
+    .attr("transform", `translate(${margins.left + dataWidth + legendLMargin}, ${legendTMargin})`)
+
 // line generator
 let lineGen = d3.line()
     .x(d => x(+d.year))
@@ -67,7 +79,8 @@ function updateGraph(data) {
     x.domain(d3.extent(data.flatMap(function(city) {
         return d3.extent(city.data, d => +d.year);
     })));
-    let xAxis = d3.axisBottom(x);
+    let xAxis = d3.axisBottom(x)
+        .tickFormat(d3.format("d"));
     xAxis(xAxisGroup)
 
     // updating Y axis
@@ -79,6 +92,9 @@ function updateGraph(data) {
 
     // updating colour scheme
     colours.domain(data.map(city => city.name))
+
+    // updating legend
+    legend(legendGroup);
 
     // joining the data to each line
     let mean = dataArea.selectAll(".mean")
