@@ -44,41 +44,58 @@ svg.append("text")
     .attr("transform", `rotate(-90, ${margins.left - labelMargin}, ${dataHeight / 2 + margins.top})`)
     .text("Temp");
 
-// formats data
+// X axis
+var x = d3.scaleLinear()
+    .range([0, dataWidth]);
+var xAxisGroup = dataArea.append("g")
+    .attr("transform", `translate(0, ${dataHeight})`);
+
+// Y axis
+var y = d3.scaleLinear()
+    .range([dataHeight, 0]);
+var yAxisGroup = dataArea.append("g")
+    .call(d3.axisLeft(y));
+
+// formatting data
 function formatData(d) {
     return {year: d.year, mean: d.mean, high: d.high, low: d.low}
 }
 
 // updates graph with new data
-function updateGraph(d) {
-    // X axis
-    var x = d3.scaleLinear()
-        .domain(d3.extent(data, function(d) { return +d.year; }))
-        .range([0, dataWidth]);
-    dataArea.append("g")
-        .attr("transform", "translate(0," + dataHeight + ")")
-        .call(d3.axisBottom(x));
+function updateGraph(data) {
+    // updating X axis
+    x.domain(d3.extent(data, function(d) { return +d.year }));
+    var xAxis = d3.axisBottom(x);
+    xAxis(xAxisGroup)
+    // updating Y axis
+    y.domain([d3.min(data, function(d) { return +d.low }),
+              d3.max(data, function(d) { return +d.high })])
+    var yAxis = d3.axisLeft(y);
+    yAxis(yAxisGroup)
 
-    // Y axis
-    var y = d3.scaleLinear()
-        .domain([d3.min(data, function(d) { return +d.low; }), d3.max(data, function(d) { return +d.high; })])
-        .range([dataHeight, 0]);
-    dataArea.append("g")
-        .call(d3.axisLeft(y));
-
-    // average mean temperature
-    dataArea.append("path")
-        .datum(data)
+    // joining the data to each line
+    var mean = dataArea.selectAll(".mean")
+        .data([data]);
+    var high = dataArea.selectAll(".high")
+        .data([data]);
+    var low = dataArea.selectAll(".low")
+        .data([data]);
+    
+    // adding the lines if they don't exist already and updating them
+    mean.enter()
+        .append("path")
+        .attr("class", "mean")
         .attr("fill", "none")
         .attr("stroke", "#777")
         .attr("stroke-width", 1.5)
+        .merge(mean)
         .attr("d", d3.line()
             .x(function(d) { return x(d.year) })
             .y(function(d) { return y(d.mean) })
         );
-    // average high temperature
-    dataArea.append("path")
-        .datum(data)
+    high.enter()
+        .append("path")
+        .attr("class", "high")
         .attr("fill", "none")
         .attr("stroke", "#a00")
         .attr("stroke-width", 1.5)
@@ -86,9 +103,9 @@ function updateGraph(d) {
             .x(function(d) { return x(d.year) })
             .y(function(d) { return y(d.high) })
         );
-    // average low temperature
-    dataArea.append("path")
-        .datum(data)
+    low.enter()
+        .append("path")
+        .attr("class", "low")
         .attr("fill", "none")
         .attr("stroke", "#00a")
         .attr("stroke-width", 1.5)
