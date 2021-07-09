@@ -58,7 +58,7 @@ var yAxisGroup = dataArea.append("g")
 
 // formatting data
 function formatData(d) {
-    return {year: d.year, mean: d.mean, high: d.high, low: d.low}
+    return {year: d.year, mean: d.mean}
 }
 
 // updates graph with new data
@@ -67,18 +67,14 @@ function updateGraph(data) {
     x.domain(d3.extent(data, function(d) { return +d.year }));
     var xAxis = d3.axisBottom(x);
     xAxis(xAxisGroup)
+
     // updating Y axis
-    y.domain([d3.min(data, function(d) { return +d.low }),
-              d3.max(data, function(d) { return +d.high })])
+    y.domain(d3.extent(data, function(d) { return +d.mean }))
     var yAxis = d3.axisLeft(y);
     yAxis(yAxisGroup)
 
     // joining the data to each line
     var mean = dataArea.selectAll(".mean")
-        .data([data]);
-    var high = dataArea.selectAll(".high")
-        .data([data]);
-    var low = dataArea.selectAll(".low")
         .data([data]);
     
     // adding the lines if they don't exist already and updating them
@@ -92,26 +88,6 @@ function updateGraph(data) {
         .attr("d", d3.line()
             .x(function(d) { return x(d.year) })
             .y(function(d) { return y(d.mean) })
-        );
-    high.enter()
-        .append("path")
-        .attr("class", "high")
-        .attr("fill", "none")
-        .attr("stroke", "#a00")
-        .attr("stroke-width", 1.5)
-        .attr("d", d3.line()
-            .x(function(d) { return x(d.year) })
-            .y(function(d) { return y(d.high) })
-        );
-    low.enter()
-        .append("path")
-        .attr("class", "low")
-        .attr("fill", "none")
-        .attr("stroke", "#00a")
-        .attr("stroke-width", 1.5)
-        .attr("d", d3.line()
-            .x(function(d) { return x(d.year) })
-            .y(function(d) { return y(d.low) })
         );
 }
 
