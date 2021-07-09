@@ -1,3 +1,5 @@
+const cities = ["toronto", "new_york"];
+
 // dimensions
 const width = 460;
 const height = 400;
@@ -8,24 +10,13 @@ const dataHeight = height - margins.top - margins.bottom;
 
 const labelMargin = 30;
 
-const titleY = 10;
-
-
-var svg = d3.select("#canvas").append("svg")
+// creating the graph area
+let svg = d3.select("#canvas").append("svg")
             .attr("width", width)
             .attr("height", height);
 
-var dataArea = svg.append("g")
+let dataArea = svg.append("g")
                 .attr("transform", `translate(${margins.left}, ${margins.top})`);
-
-// title
-svg.append("text")
-    .attr("text-anchor", "middle")
-    .attr("dominant-baseline", "hanging")
-    .attr("x", width / 2)
-    .attr("y", titleY)
-    .attr("font-weight", "bold")
-    .text("Toronto");
 
 // X axis label
 svg.append("text")
@@ -45,54 +36,80 @@ svg.append("text")
     .text("Temp");
 
 // X axis
-var x = d3.scaleLinear()
+let x = d3.scaleLinear()
     .range([0, dataWidth]);
-var xAxisGroup = dataArea.append("g")
+let xAxisGroup = dataArea.append("g")
     .attr("transform", `translate(0, ${dataHeight})`);
 
 // Y axis
-var y = d3.scaleLinear()
+let y = d3.scaleLinear()
     .range([dataHeight, 0]);
-var yAxisGroup = dataArea.append("g")
+let yAxisGroup = dataArea.append("g")
     .call(d3.axisLeft(y));
+
+// colour scheme
+let colours = d3.scaleOrdinal(d3.schemeCategory10);
+
+// line generator
+let lineGen = d3.line()
+    .x(d => x(+d.year))
+    .y(d => y(+d.mean));
 
 // formatting data
 function formatData(d) {
-    return {year: d.year, mean: d.mean}
+    return {year: +d.year, mean: +d.mean};
 }
 
 // updates graph with new data
 function updateGraph(data) {
     // updating X axis
-    x.domain(d3.extent(data, function(d) { return +d.year }));
-    var xAxis = d3.axisBottom(x);
+    x.domain(d3.extent(data.flatMap(function(city) {
+        return d3.extent(city.data, d => +d.year)
+    })));
+    let xAxis = d3.axisBottom(x);
     xAxis(xAxisGroup)
 
     // updating Y axis
-    y.domain(d3.extent(data, function(d) { return +d.mean }))
-    var yAxis = d3.axisLeft(y);
+    y.domain(d3.extent(data.flatMap(function(city) {
+        return d3.extent(city.data, d => +d.mean)
+    })));
+    let yAxis = d3.axisLeft(y);
     yAxis(yAxisGroup)
 
+    // updating colour scheme
+    colours.domain(data.map(city => city.name))
+
     // joining the data to each line
-    var mean = dataArea.selectAll(".mean")
-        .data([data]);
+    let mean = dataArea.selectAll(".mean")
+        .data(data);
     
     // adding the lines if they don't exist already and updating them
     mean.enter()
         .append("path")
         .attr("class", "mean")
         .attr("fill", "none")
-        .attr("stroke", "#777")
+        .attr("stroke", d => colours(d.name))
         .attr("stroke-width", 1.5)
         .merge(mean)
-        .attr("d", d3.line()
-            .x(function(d) { return x(d.year) })
-            .y(function(d) { return y(d.mean) })
-        );
+        .attr("d", function(d) { return lineGen(d.data);});
 }
 
 // reading the data
-d3.csv("data.csv",
-       formatData, // formatting the data
-       updateGraph // updating the graph
-);
+let allData = [];
+// this counter is necessary because d3.csv is async
+let citiesLoaded = 0;
+
+for (let city of cities) {
+    d3.csv(`${city}.csv`,
+        formatData, // formatting the data
+        function(d) { // storing the data
+            allData.push({name: city, data: d});
+            citiesLoaded++;
+
+            // if all cities are loaded
+            if (citiesLoaded === cities.length) {
+                updateGraph(allData);
+            }
+        }
+    );
+}
