@@ -62,9 +62,10 @@ function formatData(d) {
 
 // updates graph with new data
 function updateGraph(data) {
+    console.log(data);
     // updating X axis
     x.domain(d3.extent(data.flatMap(function(city) {
-        return d3.extent(city.data, d => +d.year)
+        return d3.extent(city.data, d => +d.year);
     })));
     let xAxis = d3.axisBottom(x);
     xAxis(xAxisGroup)
@@ -96,20 +97,14 @@ function updateGraph(data) {
 
 // reading the data
 let allData = [];
-// this counter is necessary because d3.csv is async
-let citiesLoaded = 0;
 
-for (let city of cities) {
-    d3.csv(`${city}.csv`,
-        formatData, // formatting the data
-        function(d) { // storing the data
-            allData.push({name: city, data: d});
-            citiesLoaded++;
+for (let i in cities) {
+    d3.csv(`${cities[i]}.csv`, formatData).then(function(d) { // storing the data
+        allData.push({name: cities[i], data: d});
 
-            // if all cities are loaded
-            if (citiesLoaded === cities.length) {
-                updateGraph(allData);
-            }
+        // if all cities are loaded
+        if (+i === (cities.length - 1)) {
+            updateGraph(allData);
         }
-    );
+    });
 }
