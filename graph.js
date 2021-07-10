@@ -1,31 +1,27 @@
+// default city/cities
+let cities = ["toronto", "new_york"];
+
 // dimensions
-const width = 460;
+const width = 600;
 const height = 400;
 
-const margins = {top: 30, right: 30, bottom: 50, left: 80};
+const margins = {top: 30, right: 150, bottom: 50, left: 80};
 const dataWidth = width - margins.left - margins.right;
 const dataHeight = height - margins.top - margins.bottom;
 
 const labelMargin = 30;
 
-const titleY = 10;
+const legendLMargin = 30;
+const legendTMargin = 10;
 
 
-var svg = d3.select("#canvas").append("svg")
-            .attr("width", width)
-            .attr("height", height);
+// creating the graph area
+let svg = d3.select("#canvas").append("svg")
+    .attr("width", width)
+    .attr("height", height);
 
-var dataArea = svg.append("g")
-                .attr("transform", `translate(${margins.left}, ${margins.top})`);
-
-// title
-svg.append("text")
-    .attr("text-anchor", "middle")
-    .attr("dominant-baseline", "hanging")
-    .attr("x", width / 2)
-    .attr("y", titleY)
-    .attr("font-weight", "bold")
-    .text("Toronto");
+let dataArea = svg.append("g")
+    .attr("transform", `translate(${margins.left}, ${margins.top})`);
 
 // X axis label
 svg.append("text")
@@ -44,60 +40,92 @@ svg.append("text")
     .attr("transform", `rotate(-90, ${margins.left - labelMargin}, ${dataHeight / 2 + margins.top})`)
     .text("Temp");
 
+// X axis
+let x = d3.scaleLinear()
+    .range([0, dataWidth]);
+let xAxisGroup = dataArea.append("g")
+    .attr("transform", `translate(0, ${dataHeight})`);
+
+// Y axis
+let y = d3.scaleLinear()
+    .range([dataHeight, 0]);
+let yAxisGroup = dataArea.append("g")
+    .call(d3.axisLeft(y));
+
+// colour scheme
+let colours = d3.scaleOrdinal(d3.schemeCategory10);
+
+// legend
+let legend = d3.legendColor()
+    .shape("circle")
+    .shapePadding(10)
+    .scale(colours);
+let legendGroup = svg.append("g")
+    .attr("transform", `translate(${margins.left + dataWidth + legendLMargin}, ${legendTMargin})`);
+
+// line generator
+let lineGen = d3.line()
+    .x(d => x(+d.year))
+    .y(d => y(+d.mean));
+
+// formatting data
+function formatData(d) {
+    return {year: +d.year, mean: +d.mean};
+}
+
+// updates graph with new data
+function updateGraph(data) {
+    // updating X axis
+    // getting min and max of each city, then the min and max of all of those, to get the overall extent of the data
+    x.domain(d3.extent(data.flatMap(city => d3.extent(city.data, d => +d.year))));
+    let xAxis = d3.axisBottom(x)
+        .tickFormat(d3.format("d")); // to remove thousand separators for years
+    xAxis(xAxisGroup);
+
+    // updating Y axis
+    y.domain(d3.extent(data.flatMap(city => d3.extent(city.data, d => +d.mean))));
+    let yAxis = d3.axisLeft(y);
+    yAxis(yAxisGroup);
+
+    // updating colour scheme
+    colours.domain(data.map(city => city.name));
+
+    // updating legend
+    legend(legendGroup);
+
+    // joining the data to each line
+    let mean = dataArea.selectAll(".mean")
+        .data(data);
+    
+    // removing lines that are no longer needed
+    mean.exit().remove();
+    
+    // adding the lines if they don't exist already and updating them
+    mean.enter()
+        .append("path")
+        .attr("class", "mean")
+        .attr("fill", "none")
+        .attr("stroke", d => colours(d.name))
+        .attr("stroke-width", 1.5)
+        .merge(mean)
+        .attr("d", d => lineGen(d.data));
+}
+
+// converts from city id to city name
+function idToName(id) {
+    return id.split("_").map(word => word.charAt(0).toUpperCase() + word.substr(1)).join(" ")
+}
+
 // reading the data
-d3.csv("data.csv",
+let allData = [];
 
-    // formatting variables
-    function(d){
-        return {year: d.year, mean: d.mean, high: d.high, low: d.low}
-    },
+for (let i in cities) {
+    d3.csv(`${cities[i]}.csv`, formatData).then(function(d) { // storing the data
+        allData.push({name: idToName(cities[i]), data: d});
 
-    // using the dataset
-    function(data) {
-        console.log(data);
-        // X axis
-        var x = d3.scaleLinear()
-            .domain(d3.extent(data, function(d) { return +d.year; }))
-            .range([0, dataWidth]);
-        dataArea.append("g")
-            .attr("transform", "translate(0," + dataHeight + ")")
-            .call(d3.axisBottom(x));
-
-        // Y axis
-        var y = d3.scaleLinear()
-            .domain([d3.min(data, function(d) { return +d.low; }), d3.max(data, function(d) { return +d.high; })])
-            .range([dataHeight, 0]);
-        dataArea.append("g")
-            .call(d3.axisLeft(y));
-
-        // average mean temperature
-        dataArea.append("path")
-            .datum(data)
-            .attr("fill", "none")
-            .attr("stroke", "#777")
-            .attr("stroke-width", 1.5)
-            .attr("d", d3.line()
-                .x(function(d) { return x(d.year) })
-                .y(function(d) { return y(d.mean) })
-            );
-        // average high temperature
-        dataArea.append("path")
-            .datum(data)
-            .attr("fill", "none")
-            .attr("stroke", "#a00")
-            .attr("stroke-width", 1.5)
-            .attr("d", d3.line()
-                .x(function(d) { return x(d.year) })
-                .y(function(d) { return y(d.high) })
-            );
-        // average low temperature
-        dataArea.append("path")
-            .datum(data)
-            .attr("fill", "none")
-            .attr("stroke", "#00a")
-            .attr("stroke-width", 1.5)
-            .attr("d", d3.line()
-                .x(function(d) { return x(d.year) })
-                .y(function(d) { return y(d.low) })
-            );
-});
+        // if all cities are loaded
+        if (+i === (cities.length - 1)) {
+            updateGraph(allData);
+        }
+    });
+}
