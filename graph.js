@@ -38,7 +38,7 @@ svg.append("text")
     .attr("x", margins.left - labelMargin)
     .attr("y", dataHeight / 2 + margins.top)
     .attr("transform", `rotate(-90, ${margins.left - labelMargin}, ${dataHeight / 2 + margins.top})`)
-    .text("Temp");
+    .text("Temperature");
 
 // X axis
 let x = d3.scaleLinear()
