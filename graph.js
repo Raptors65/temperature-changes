@@ -97,6 +97,9 @@ function updateGraph(data) {
     let mean = dataArea.selectAll(".mean")
         .data(data);
     
+    // removing lines that are no longer needed
+    mean.exit().remove();
+    
     // adding the lines if they don't exist already and updating them
     mean.enter()
         .append("path")
