@@ -1,3 +1,4 @@
+// default city/cities
 const cities = ["toronto", "new_york"];
 
 // dimensions
@@ -16,11 +17,11 @@ const legendTMargin = 10;
 
 // creating the graph area
 let svg = d3.select("#canvas").append("svg")
-            .attr("width", width)
-            .attr("height", height);
+    .attr("width", width)
+    .attr("height", height);
 
 let dataArea = svg.append("g")
-                .attr("transform", `translate(${margins.left}, ${margins.top})`);
+    .attr("transform", `translate(${margins.left}, ${margins.top})`);
 
 // X axis label
 svg.append("text")
@@ -60,7 +61,7 @@ let legend = d3.legendColor()
     .shapePadding(10)
     .scale(colours);
 let legendGroup = svg.append("g")
-    .attr("transform", `translate(${margins.left + dataWidth + legendLMargin}, ${legendTMargin})`)
+    .attr("transform", `translate(${margins.left + dataWidth + legendLMargin}, ${legendTMargin})`);
 
 // line generator
 let lineGen = d3.line()
@@ -74,24 +75,23 @@ function formatData(d) {
 
 // updates graph with new data
 function updateGraph(data) {
-    console.log(data);
     // updating X axis
     x.domain(d3.extent(data.flatMap(function(city) {
         return d3.extent(city.data, d => +d.year);
     })));
     let xAxis = d3.axisBottom(x)
         .tickFormat(d3.format("d"));
-    xAxis(xAxisGroup)
+    xAxis(xAxisGroup);
 
     // updating Y axis
     y.domain(d3.extent(data.flatMap(function(city) {
-        return d3.extent(city.data, d => +d.mean)
+        return d3.extent(city.data, d => +d.mean);
     })));
     let yAxis = d3.axisLeft(y);
-    yAxis(yAxisGroup)
+    yAxis(yAxisGroup);
 
     // updating colour scheme
-    colours.domain(data.map(city => city.name))
+    colours.domain(data.map(city => city.name));
 
     // updating legend
     legend(legendGroup);
@@ -108,7 +108,7 @@ function updateGraph(data) {
         .attr("stroke", d => colours(d.name))
         .attr("stroke-width", 1.5)
         .merge(mean)
-        .attr("d", function(d) { return lineGen(d.data);});
+        .attr("d", function(d) { return lineGen(d.data) });
 }
 
 // reading the data
