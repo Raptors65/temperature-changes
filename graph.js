@@ -1,5 +1,5 @@
 // default city/cities
-const cities = ["toronto", "new_york"];
+let cities = ["toronto", "new_york"];
 
 // dimensions
 const width = 600;
@@ -79,7 +79,7 @@ function updateGraph(data) {
     // getting min and max of each city, then the min and max of all of those, to get the overall extent of the data
     x.domain(d3.extent(data.flatMap(city => d3.extent(city.data, d => +d.year))));
     let xAxis = d3.axisBottom(x)
-        .tickFormat(d3.format("d"));
+        .tickFormat(d3.format("d")); // to remove thousand separators for years
     xAxis(xAxisGroup);
 
     // updating Y axis
@@ -111,12 +111,17 @@ function updateGraph(data) {
         .attr("d", d => lineGen(d.data));
 }
 
+// converts from city id to city name
+function idToName(id) {
+    return id.split("_").map(word => word.charAt(0).toUpperCase() + word.substr(1)).join(" ")
+}
+
 // reading the data
 let allData = [];
 
 for (let i in cities) {
     d3.csv(`${cities[i]}.csv`, formatData).then(function(d) { // storing the data
-        allData.push({name: cities[i], data: d});
+        allData.push({name: idToName(cities[i]), data: d});
 
         // if all cities are loaded
         if (+i === (cities.length - 1)) {
