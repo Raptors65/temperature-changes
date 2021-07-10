@@ -76,17 +76,14 @@ function formatData(d) {
 // updates graph with new data
 function updateGraph(data) {
     // updating X axis
-    x.domain(d3.extent(data.flatMap(function(city) {
-        return d3.extent(city.data, d => +d.year);
-    })));
+    // getting min and max of each city, then the min and max of all of those, to get the overall extent of the data
+    x.domain(d3.extent(data.flatMap(city => d3.extent(city.data, d => +d.year))));
     let xAxis = d3.axisBottom(x)
         .tickFormat(d3.format("d"));
     xAxis(xAxisGroup);
 
     // updating Y axis
-    y.domain(d3.extent(data.flatMap(function(city) {
-        return d3.extent(city.data, d => +d.mean);
-    })));
+    y.domain(d3.extent(data.flatMap(city => d3.extent(city.data, d => +d.mean))));
     let yAxis = d3.axisLeft(y);
     yAxis(yAxisGroup);
 
@@ -108,7 +105,7 @@ function updateGraph(data) {
         .attr("stroke", d => colours(d.name))
         .attr("stroke-width", 1.5)
         .merge(mean)
-        .attr("d", function(d) { return lineGen(d.data) });
+        .attr("d", d => lineGen(d.data));
 }
 
 // reading the data
