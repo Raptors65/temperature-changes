@@ -59,11 +59,7 @@ let yAxisGroup = dataArea.append("g")
 // colour scheme
 let colours = d3.scaleOrdinal(d3.schemeCategory10);
 
-// legend
-let legend = d3.legendColor()
-    .shape("circle")
-    .shapePadding(10)
-    .scale(colours);
+// legend group
 let legendGroup = svg.append("g")
     .attr("transform", `translate(${margins.left + dataWidth + legendLMargin}, ${legendTMargin})`);
 
