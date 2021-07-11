@@ -14,6 +14,10 @@ const labelMargin = 30;
 const legendLMargin = 30;
 const legendTMargin = 10;
 
+const legendLineSpace = 20;
+const legendCircleR = 5;
+const legendTextLMargin = 10;
+
 
 // creating the graph area
 let svg = d3.select("#canvas").append("svg")
@@ -38,7 +42,7 @@ svg.append("text")
     .attr("x", margins.left - labelMargin)
     .attr("y", dataHeight / 2 + margins.top)
     .attr("transform", `rotate(-90, ${margins.left - labelMargin}, ${dataHeight / 2 + margins.top})`)
-    .text("Temp");
+    .text("Temperature");
 
 // X axis
 let x = d3.scaleLinear()
@@ -55,11 +59,7 @@ let yAxisGroup = dataArea.append("g")
 // colour scheme
 let colours = d3.scaleOrdinal(d3.schemeCategory10);
 
-// legend
-let legend = d3.legendColor()
-    .shape("circle")
-    .shapePadding(10)
-    .scale(colours);
+// legend group
 let legendGroup = svg.append("g")
     .attr("transform", `translate(${margins.left + dataWidth + legendLMargin}, ${legendTMargin})`);
 
@@ -89,9 +89,32 @@ function updateGraph(data) {
 
     // updating colour scheme
     colours.domain(data.map(city => city.name));
-
+    
     // updating legend
-    legend(legendGroup);
+    let circles = legendGroup.selectAll("circle")
+        .data(cities.map(idToName));
+    let text = legendGroup.selectAll("text")
+        .data(cities.map(idToName));
+    
+    circles.exit().remove();
+    text.exit().remove();
+    
+    circles.enter()
+        .append("circle")
+        .attr("cx", legendCircleR)
+        .attr("r", legendCircleR)
+        .merge(circles)
+            .attr("cy", (d, i) => legendLineSpace * i + legendCircleR)
+            .attr("fill", colours);
+    
+    text.enter()
+        .append("text")
+        .attr("text-anchor", "start")
+        .attr("dominant-baseline", "middle")
+        .attr("x", legendCircleR * 2 + legendTextLMargin)
+        .merge(text)
+            .attr("y", (d, i) => legendLineSpace * i + legendCircleR)
+            .text(city => city);
 
     // joining the data to each line
     let mean = dataArea.selectAll(".mean")
@@ -99,15 +122,17 @@ function updateGraph(data) {
     
     // removing lines that are no longer needed
     mean.exit().remove();
+
+    mean.attr("stroke", d => colours(d.name))
+    .attr("d", d => lineGen(d.data));
     
     // adding the lines if they don't exist already and updating them
     mean.enter()
         .append("path")
         .attr("class", "mean")
         .attr("fill", "none")
-        .attr("stroke", d => colours(d.name))
         .attr("stroke-width", 1.5)
-        .merge(mean)
+        .attr("stroke", d => colours(d.name))
         .attr("d", d => lineGen(d.data));
 }
 
